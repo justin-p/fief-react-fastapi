@@ -1,6 +1,6 @@
 import random
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2AuthorizationCodeBearer
 from fief_client import FiefAsync
@@ -45,7 +45,7 @@ class RandomPetName(BaseModel):
 
 @app.get("/random_pet")
 async def random_pet(
-    # random_pet_name: RandomPetName = Depends(auth.authenticated()),
+    random_pet_name: RandomPetName = Depends(auth.authenticated()),
 ):
     pet_names = [
         "Fluffy",
@@ -74,11 +74,11 @@ async def random_pet(
 
 
 # Add CORS middleware
-origins = ["https://frontend.local.test"]
+origins = ["http://frontend.local.test"]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

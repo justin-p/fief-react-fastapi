@@ -8,8 +8,8 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.api.rule=Host(`api.local.test`)"
-      - "traefik.http.routers.api.entrypoints=websecure"
-      - "traefik.http.routers.api.tls.certresolver=myresolver"
+      - "traefik.http.routers.api.entrypoints=web"
+      #- "traefik.http.routers.api.tls.certresolver=myresolver"
     networks:
       - fief_traefik
 
@@ -18,8 +18,8 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.frontend.rule=Host(`frontend.local.test`)"
-      - "traefik.http.routers.frontend.entrypoints=websecure"
-      - "traefik.http.routers.frontend.tls.certresolver=myresolver"
+      - "traefik.http.routers.frontend.entrypoints=web"
+      #- "traefik.http.routers.frontend.tls.certresolver=myresolver"
     networks:
       - fief_traefik
 

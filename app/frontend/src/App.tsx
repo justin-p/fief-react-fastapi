@@ -1,40 +1,31 @@
-import { useState, useEffect } from 'react'
-import './App.css'
+import { FiefAuthProvider } from '@fief/fief/react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
-interface PetName {
-  name: string
-}
+import Callback from './Callback';
+import Public from './Public';
+import Private from './Private';
+import Header from './Header';
+import RequireAuth from './RequireAuth';
 
 function App() {
-  const [petName, setPetName] = useState<string | null>(null)
-
-  useEffect(() => {
-    const fetchPetName = async () => {
-      try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/random_pet`)
-        if (!response.ok) {
-          throw new Error('Network response was not ok')
-        }
-        const data: PetName = await response.json()
-        setPetName(data.name)
-      } catch (error) {
-        console.error('Error fetching pet name:', error)
-      }
-    }
-
-    fetchPetName()
-  }, [])
-
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen">
-      <h1 className="text-3xl font-bold mb-4">Random Pet Name</h1>
-      {petName ? (
-        <p className="text-xl">Your random pet name is: <span className="font-semibold">{petName}</span></p>
-      ) : (
-        <p className="text-xl">Loading...</p>
-      )}
-    </div>
-  )
+    <BrowserRouter>
+      <FiefAuthProvider 
+        baseURL="https://fief.local.test"
+        clientId="fK7Qs2Lp9Xm4Nh6Bv3Jt8Ry5Gz1Wd7C"
+      >
+        <div className="App">
+          <h1>Random Pet Name Generator</h1>
+          <Header />
+          <Routes>
+            <Route path="/" element={<Public />} />
+            <Route path="/private" element={<RequireAuth><Private /></RequireAuth>} />
+            <Route path="/callback" element={<Callback />} />
+          </Routes>
+        </div>
+      </FiefAuthProvider>
+    </BrowserRouter>
+  );
 }
 
-export default App
+export default App;
