@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useFiefAuth } from '@fief/fief/react'
 import './App.css'
 
 interface PetName {
@@ -7,11 +8,20 @@ interface PetName {
 
 function App() {
   const [petName, setPetName] = useState<string | null>(null)
+  const fiefAuth = useFiefAuth()
 
   useEffect(() => {
     const fetchPetName = async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/random_pet`)
+        const token = await fiefAuth.getTokenInfo();
+        if (!token) {
+          throw new Error('No token available');
+        }
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/random_pet`, {
+          headers: {
+            'Authorization': `Bearer ${token.access_token}`
+          }
+        });
         if (!response.ok) {
           throw new Error('Network response was not ok')
         }
@@ -19,11 +29,12 @@ function App() {
         setPetName(data.name)
       } catch (error) {
         console.error('Error fetching pet name:', error)
+        setPetName(null)
       }
     }
 
     fetchPetName()
-  }, [])
+  }, [fiefAuth])
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen">
