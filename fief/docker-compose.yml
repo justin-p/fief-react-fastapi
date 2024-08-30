@@ -1,0 +1,91 @@
+services:
+  fief-server:
+    image: ghcr.io/fief-dev/fief:latest
+    command: fief run-server
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+      - redis
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.fief.rule=Host(`${FIEF_DOMAIN}`)"
+      - "traefik.http.routers.fief.entrypoints=websecure"
+      - "traefik.http.routers.fief.tls.certresolver=myresolver"
+    networks:
+      - "traefik"
+      - "fief"
+
+  fief-worker:
+    image: ghcr.io/fief-dev/fief:latest
+    command: fief run-worker -p 1 -t 1
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - "fief"
+
+  postgres:
+    image: postgres:alpine
+    environment:
+      - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
+      - POSTGRES_USER=${DATABASE_USERNAME}
+      - POSTGRES_DB=${DATABASE_NAME}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - "fief"
+
+
+  redis:
+    image: redis:alpine
+    command: redis-server --save 60 1 --loglevel warning
+    volumes:
+      - redis-data:/data
+    networks:
+      - "fief"
+
+  traefik:
+    image: "traefik:v2.11"
+    container_name: "traefik"
+    command:
+      # Uncomment the lines below to debug and try with a self-signed certificate
+      - "--log.level=DEBUG"
+      - "--certificatesresolvers.myresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
+      - "--certificatesresolvers.myresolver.acme.email=${FIEF_MAIN_USER_EMAIL}"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+    ports:
+      - "443:443"
+      - "8080:8080"
+    volumes:
+      - "letsencrypt-data:/letsencrypt"
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    networks:
+      - "traefik"
+      - "fief"
+
+  backup:
+    image: jareware/docker-volume-backup
+    volumes:
+      - redis-data:/backup/redis-data:ro
+      - postgres-data:/backup/postgres-data:ro
+      - letsencrypt-data:/backup/letsencrypt-data:ro
+      - ./backups:/archive
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      POST_BACKUP_COMMAND: "docker run --rm -e DRY_RUN=false -v ./backups:/archive ghcr.io/jan-brinkmann/docker-rotate-backups"
+networks:
+  traefik:
+  fief:
+
+volumes:
+  redis-data:
+  postgres-data:
+  letsencrypt-data:

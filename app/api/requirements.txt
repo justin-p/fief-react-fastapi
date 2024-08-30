@@ -1,0 +1,5 @@
+fastapi==0.112.2
+uvicorn==0.30.6
+fief-client[fastapi]==0.19.0
+python-multipart==0.0.9
+pydantic_settings==2.4.0
