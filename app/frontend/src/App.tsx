@@ -11,8 +11,8 @@ function App() {
   return (
     <BrowserRouter>
       <FiefAuthProvider 
-        baseURL="https://fief.local.test"
-        clientId="fK7Qs2Lp9Xm4Nh6Bv3Jt8Ry5Gz1Wd7C"
+        baseURL={import.meta.env.VITE_FIEF_BASE_URL}
+        clientId={import.meta.env.VITE_FIEF_CLIENT_ID}
       >
         <div className="App">
           <h1>Random Pet Name Generator</h1>
